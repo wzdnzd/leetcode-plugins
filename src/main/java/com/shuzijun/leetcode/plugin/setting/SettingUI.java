@@ -1,6 +1,8 @@
 package com.shuzijun.leetcode.plugin.setting;
 
 import com.intellij.ide.BrowserUtil;
+import com.intellij.ide.DataManager;
+import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
@@ -20,6 +22,7 @@ import com.intellij.util.net.HttpConfigurable;
 import com.shuzijun.leetcode.plugin.listener.ColorListener;
 import com.shuzijun.leetcode.plugin.listener.ConfigNotifier;
 import com.shuzijun.leetcode.plugin.listener.DonateListener;
+import com.shuzijun.leetcode.plugin.manager.ViewManager;
 import com.shuzijun.leetcode.plugin.model.CodeTypeEnum;
 import com.shuzijun.leetcode.plugin.model.Config;
 import com.shuzijun.leetcode.plugin.model.Constant;
@@ -35,6 +38,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.util.Objects;
 
 /**
  * @author shuzijun
@@ -67,11 +71,11 @@ public class SettingUI {
     private JCheckBox convergeEditorCheckBox;
     private JCheckBox showEditorSignCheckBox;
 
-
     private Editor fileNameEditor = null;
     private Editor templateEditor = null;
     private Editor templateHelpEditor = null;
 
+    private boolean codeTypeChanged = false;
 
     public SettingUI() {
         initUI();
@@ -89,16 +93,19 @@ public class SettingUI {
         mediumLabel.addMouseListener(new ColorListener(mainPanel, mediumLabel));
         hardLabel.addMouseListener(new ColorListener(mainPanel, hardLabel));
 
-        fileFolderBtn.addBrowseFolderListener(new TextBrowseFolderListener(FileChooserDescriptorFactory.createSingleFileOrFolderDescriptor()) {
-        });
+        fileFolderBtn.addBrowseFolderListener(
+                new TextBrowseFolderListener(FileChooserDescriptorFactory.createSingleFileOrFolderDescriptor()) {
+                });
 
-        customCodeBox.addActionListener(new DonateListener(customCodeBox));
-        proxyCheckBox.setSelected(HttpConfigurable.getInstance().USE_HTTP_PROXY || HttpConfigurable.getInstance().USE_PROXY_PAC);
+        // customCodeBox.addActionListener(new DonateListener(customCodeBox));
+        proxyCheckBox.setSelected(
+                HttpConfigurable.getInstance().USE_HTTP_PROXY || HttpConfigurable.getInstance().USE_PROXY_PAC);
         proxyCheckBox.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (HttpConfigurable.editConfigurable(mainPanel)) {
-                    proxyCheckBox.setSelected(HttpConfigurable.getInstance().USE_HTTP_PROXY || HttpConfigurable.getInstance().USE_PROXY_PAC);
+                    proxyCheckBox.setSelected(HttpConfigurable.getInstance().USE_HTTP_PROXY
+                            || HttpConfigurable.getInstance().USE_PROXY_PAC);
                 }
             }
         });
@@ -110,36 +117,37 @@ public class SettingUI {
             }
         });
 
-        fileNameEditor = EditorFactory.getInstance().createEditor(EditorFactory.getInstance().createDocument(""), null, FileTypeManager.getInstance().getFileTypeByExtension("vm"), false);
+        fileNameEditor = EditorFactory.getInstance().createEditor(EditorFactory.getInstance().createDocument(""), null,
+                FileTypeManager.getInstance().getFileTypeByExtension("vm"), false);
         EditorSettings settings = fileNameEditor.getSettings();
         ((EditorImpl) fileNameEditor).setOneLineMode(true);
-        //额外的行
+        // 额外的行
         settings.setAdditionalLinesCount(0);
-        //额外的列
+        // 额外的列
         settings.setAdditionalColumnsCount(0);
         settings.setCaretRowShown(false);
-        //折叠大纲
+        // 折叠大纲
         settings.setFoldingOutlineShown(false);
-        //缩进
+        // 缩进
         settings.setIndentGuidesShown(false);
-        //线性标记区域
+        // 线性标记区域
         settings.setLineMarkerAreaShown(false);
-        //行号
+        // 行号
         settings.setLineNumbersShown(false);
-        //虚拟空间
+        // 虚拟空间
         settings.setVirtualSpace(false);
-        //允许单逻辑行折叠
+        // 允许单逻辑行折叠
         settings.setAllowSingleLogicalLineFolding(false);
-        //滚动
+        // 滚动
         settings.setAnimatedScrolling(true);
-        //底部附加
+        // 底部附加
         settings.setAdditionalPageAtBottom(false);
-        //代码自动折叠
+        // 代码自动折叠
         settings.setAutoCodeFoldingEnabled(false);
         codeFileName.add(fileNameEditor.getComponent(), BorderLayout.CENTER);
 
-
-        templateEditor = EditorFactory.getInstance().createEditor(EditorFactory.getInstance().createDocument(""), null, FileTypeManager.getInstance().getFileTypeByExtension("vm"), false);
+        templateEditor = EditorFactory.getInstance().createEditor(EditorFactory.getInstance().createDocument(""), null,
+                FileTypeManager.getInstance().getFileTypeByExtension("vm"), false);
         EditorSettings templateEditorSettings = templateEditor.getSettings();
         templateEditorSettings.setAdditionalLinesCount(0);
         templateEditorSettings.setAdditionalColumnsCount(0);
@@ -148,7 +156,9 @@ public class SettingUI {
         JBScrollPane jbScrollPane = new JBScrollPane(templateEditor.getComponent());
         codeTemplate.add(jbScrollPane, BorderLayout.CENTER);
 
-        templateHelpEditor = EditorFactory.getInstance().createEditor(EditorFactory.getInstance().createDocument(PropertiesUtils.getInfo("template.variable", "{", "}")), null, FileTypeManager.getInstance().getFileTypeByExtension("vm"), true);
+        templateHelpEditor = EditorFactory.getInstance().createEditor(
+                EditorFactory.getInstance().createDocument(PropertiesUtils.getInfo("template.variable", "{", "}")),
+                null, FileTypeManager.getInstance().getFileTypeByExtension("vm"), true);
         EditorSettings templateHelpEditorSettings = templateHelpEditor.getSettings();
         templateHelpEditorSettings.setAdditionalLinesCount(0);
         templateHelpEditorSettings.setAdditionalColumnsCount(0);
@@ -222,7 +232,6 @@ public class SettingUI {
             questionEditorBox.setSelectedItem("Left");
         }
 
-
     }
 
     public JPanel getContentPane() {
@@ -236,8 +245,14 @@ public class SettingUI {
         } else {
             Config currentState = new Config();
             process(currentState);
+
+            if (!Objects.equals(currentState.getCodeType(), config.getCodeType())) {
+                codeTypeChanged = true;
+            }
+
             if (currentState.isModified(config)) {
-                if (passwordField.getText() != null && passwordField.getText().equals(PersistentConfig.getInstance().getPassword(config.getLoginName()))) {
+                if (passwordField.getText() != null && passwordField.getText()
+                        .equals(PersistentConfig.getInstance().getPassword(config.getLoginName()))) {
                     return false;
                 } else {
                     return true;
@@ -258,7 +273,7 @@ public class SettingUI {
             oldConfig = config.clone();
         }
         process(config);
-        File file = new File(config.getFilePath() + File.separator + PersistentConfig.PATH + File.separator);
+        File file = new File(config.getFilePath());
         if (!file.exists()) {
             file.mkdirs();
         }
@@ -266,12 +281,14 @@ public class SettingUI {
         PersistentConfig.getInstance().savePassword(passwordField.getText(), config.getLoginName());
         Config finalOldConfig = oldConfig;
         Config finalConfig = config;
-        ProgressManager.getInstance().run(new Task.Backgroundable(null, PluginConstant.PLUGIN_NAME + " Apply Config", false) {
-            @Override
-            public void run(@NotNull ProgressIndicator progressIndicator) {
-                ApplicationManager.getApplication().getMessageBus().syncPublisher(ConfigNotifier.TOPIC).change(finalOldConfig, finalConfig);
-            }
-        });
+        ProgressManager.getInstance()
+                .run(new Task.Backgroundable(null, PluginConstant.PLUGIN_NAME + " Apply Config", false) {
+                    @Override
+                    public void run(@NotNull ProgressIndicator progressIndicator) {
+                        ApplicationManager.getApplication().getMessageBus().syncPublisher(ConfigNotifier.TOPIC)
+                                .change(finalOldConfig, finalConfig);
+                    }
+                });
     }
 
     public void process(Config config) {
@@ -297,7 +314,6 @@ public class SettingUI {
         config.setConvergeEditor(convergeEditorCheckBox.isSelected());
         config.setShowQuestionEditorSign(showEditorSignCheckBox.isSelected());
     }
-
 
     public void reset() {
         loadSetting();

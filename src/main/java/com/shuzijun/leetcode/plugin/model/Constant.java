@@ -67,11 +67,11 @@ public class Constant {
     /**
      * 配置文件版本记录
      */
-    //第一版本，不兼容之间的明文密码，从此版本开始隐藏密码
+    // 第一版本，不兼容之间的明文密码，从此版本开始隐藏密码
     public static final Integer PLUGIN_CONFIG_VERSION_1 = 1;
-    //第二版本，不兼容之前的临时目录，从此版本开始更换新临时目录
+    // 第二版本，不兼容之前的临时目录，从此版本开始更换新临时目录
     public static final Integer PLUGIN_CONFIG_VERSION_2 = 2;
-    //第三版本，域名更新，需要将cookie更改一下域名
+    // 第三版本，域名更新，需要将cookie更改一下域名
     public static final Integer PLUGIN_CONFIG_VERSION_3 = 3;
 
     /**
@@ -108,12 +108,12 @@ public class Constant {
     /**
      * path
      */
-    public static final String DOC_PATH = "doc"+ File.separator;
-    public static final String DOC_SOLUTION = "doc"+ File.separator + "solution" +  File.separator;
-    public static final String DOC_CONTENT = "doc"+ File.separator + "content" +  File.separator;
-    public static final String DOC_SUBMISSION = "doc"+ File.separator + "submission" +  File.separator;
-    public static final String DOC_NOTE = "doc"+ File.separator + "note" +  File.separator;
-
+    public static final String DOC_PATH = "doc" + File.separator;
+    public static final String DOC_SOLUTION = "doc" + File.separator + "solution" + File.separator;
+    public static final String DOC_CONTENT = "doc" + File.separator + "content" + File.separator;
+    public static final String DOC_SUBMISSION = "doc" + File.separator + "submission" + File.separator;
+    public static final String DOC_NOTE = "doc" + File.separator + "note" + File.separator;
+    public static final String CODE_PATH = "code" + File.separator;
 
     /**
      * CodeTop类别类型
@@ -127,6 +127,5 @@ public class Constant {
     public static final String CODETOP_SORT_TYPE_TITLE = "CodeTopSortByTitle";
     public static final String CODETOP_SORT_TYPE_TIME = "CodeTopSortByTime";
     public static final String CODETOP_SORT_TYPE_FREQUENCY = "CodeTopSortByFrequency";
-
 
 }
