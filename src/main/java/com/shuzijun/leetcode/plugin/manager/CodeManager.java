@@ -40,7 +40,7 @@ public class CodeManager {
             openContent(titleSlug, project, false);
         }
 
-        String filePath = PersistentConfig.getInstance().getTempFilePath() + VelocityUtils.convert(config.getCustomFileName(), question) + codeTypeEnum.getSuffix();
+        String filePath = PersistentConfig.getInstance().getTempFilePath() + Constant.CODE_PATH + codeTypeEnum.getLangSlug() + File.separator + VelocityUtils.convert(config.getCustomFileName(), question) + codeTypeEnum.getSuffix();
 
         File file = new File(filePath);
         BiConsumer<LeetcodeEditor, String> fillPath = (e, s) -> e.setPath(s);
